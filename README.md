@@ -2,7 +2,7 @@
 
 A simulation where colored cells walk randomly from the center of the screen. Each cell leaves a trail behind it. When a cell hits the edge it resets and starts again from the center.
 
-![App screenshot](assets/app.jpg)
+![App screenshot](Pictures/app.jpg)
 
 ## How it works
 
@@ -12,7 +12,7 @@ Each walker moves one step in a random direction every frame. It draws its path 
 
 When you press save, the canvas is exported as a PNG.
 
-![Example saved output](assets/walker.png)
+![Example saved output](Pictures/walker.png)
 
 ## Download
 
