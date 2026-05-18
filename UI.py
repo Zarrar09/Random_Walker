@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from controller import Controller
+from Controller import Controller
 
 
 CANVAS_WIDTH = 960

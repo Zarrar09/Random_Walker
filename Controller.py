@@ -1,5 +1,5 @@
 import random
-from walker import Walker
+from Walker import Walker
 
 
 # different colors for each walker
