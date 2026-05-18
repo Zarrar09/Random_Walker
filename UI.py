@@ -4,218 +4,142 @@ from Controller import Controller
 
 
 CANVAS_WIDTH = 960
-CANVAS_HEIGHT = 580
-WALKER_RADIUS = 5
+CANVAS_HEIGHT = 600
 UPDATE_DELAY = 20
 
-BG_DARK = "#0e0e14"
-BG_PANEL = "#16161f"
-BG_CANVAS = "#0a0a10"
-ACCENT = "#5c6bc0"
-ACCENT_SECONDARY = "#26a69a"
-TEXT_PRIMARY = "#e8e8f0"
-TEXT_MUTED = "#6b6b80"
+BG = "#080810"
+PANEL = "#0f0f1a"
+TEXT = "#d0d0e8"
+DIM = "#3a3a52"
 
 
 class App:
     def __init__(self, root):
         self.root = root
         self.root.title("Random Walker")
-        self.root.configure(bg=BG_DARK)
+        self.root.configure(bg=BG)
         self.root.resizable(False, False)
         self.running = False
         self.controller = Controller(CANVAS_WIDTH, CANVAS_HEIGHT)
         self.buildUI()
 
     def buildUI(self):
-        # outer wrapper with padding
-        wrapper = tk.Frame(self.root, bg=BG_DARK)
-        wrapper.pack(padx=24, pady=20, fill="both")
+        wrapper = tk.Frame(self.root, bg=BG)
+        wrapper.pack(padx=28, pady=(20, 14))
 
-        # header row
-        header = tk.Frame(wrapper, bg=BG_DARK)
-        header.pack(fill="x", pady=(0, 16))
-
+        # title
         tk.Label(
-            header,
-            text="Random Walker",
-            font=("Helvetica", 22, "bold"),
-            bg=BG_DARK,
-            fg=TEXT_PRIMARY
-        ).pack(side="left")
+            wrapper,
+            text="R A N D O M   W A L K E R",
+            font=("Courier", 15, "bold"),
+            bg=BG,
+            fg=TEXT
+        ).pack(anchor="w", pady=(0, 18))
 
-        tk.Label(
-            header,
-            text="watch cells wander until they disappear",
-            font=("Helvetica", 11),
-            bg=BG_DARK,
-            fg=TEXT_MUTED
-        ).pack(side="left", padx=(14, 0), pady=(6, 0))
-
-        # control panel
-        panel = tk.Frame(wrapper, bg=BG_PANEL, padx=20, pady=14)
-        panel.pack(fill="x", pady=(0, 14))
-
-        # walker count control
-        countGroup = tk.Frame(panel, bg=BG_PANEL)
-        countGroup.pack(side="left", padx=(0, 30))
-
-        tk.Label(
-            countGroup,
-            text="WALKERS",
-            font=("Helvetica", 9, "bold"),
-            bg=BG_PANEL,
-            fg=TEXT_MUTED
-        ).pack(anchor="w")
-
-        sliderRow = tk.Frame(countGroup, bg=BG_PANEL)
-        sliderRow.pack(fill="x", pady=(4, 0))
-
-        self.walkerCount = tk.IntVar(value=10)
+        # control bar
+        bar = tk.Frame(wrapper, bg=PANEL, padx=22, pady=14)
+        bar.pack(fill="x", pady=(0, 12))
 
         style = ttk.Style()
         style.theme_use("clam")
         style.configure(
-            "Custom.Horizontal.TScale",
-            background=BG_PANEL,
-            troughcolor="#2a2a38",
-            sliderlength=18
+            "S.Horizontal.TScale",
+            background=PANEL,
+            troughcolor=DIM,
+            sliderlength=14,
+            sliderrelief="flat"
         )
 
-        slider = ttk.Scale(
-            sliderRow,
-            from_=1,
-            to=20,
-            variable=self.walkerCount,
-            orient="horizontal",
-            length=200,
-            style="Custom.Horizontal.TScale",
-            command=lambda v: self.walkerCount.set(int(float(v)))
-        )
-        slider.pack(side="left")
+        self.walkerCount = tk.IntVar(value=5)
+        self.speedVar = tk.IntVar(value=4)
 
-        self.countDisplay = tk.Label(
-            sliderRow,
-            textvariable=self.walkerCount,
-            font=("Helvetica", 14, "bold"),
-            bg=BG_PANEL,
-            fg=TEXT_PRIMARY,
-            width=3
-        )
-        self.countDisplay.pack(side="left", padx=(12, 0))
+        self.addSlider(bar, "walkers", self.walkerCount, 1, 5, 180)
 
-        # speed control
-        speedGroup = tk.Frame(panel, bg=BG_PANEL)
-        speedGroup.pack(side="left", padx=(0, 30))
+        tk.Frame(bar, bg=DIM, width=1, height=28).pack(side="left", padx=20)
 
-        tk.Label(
-            speedGroup,
-            text="SPEED",
-            font=("Helvetica", 9, "bold"),
-            bg=BG_PANEL,
-            fg=TEXT_MUTED
-        ).pack(anchor="w")
+        self.addSlider(bar, "speed", self.speedVar, 1, 8, 130)
 
-        speedRow = tk.Frame(speedGroup, bg=BG_PANEL)
-        speedRow.pack(fill="x", pady=(4, 0))
+        tk.Frame(bar, bg=BG, width=1).pack(side="left", expand=True)
 
-        self.speedVar = tk.IntVar(value=3)
-
-        speedSlider = ttk.Scale(
-            speedRow,
-            from_=1,
-            to=8,
-            variable=self.speedVar,
-            orient="horizontal",
-            length=140,
-            style="Custom.Horizontal.TScale",
-            command=lambda v: self.speedVar.set(int(float(v)))
-        )
-        speedSlider.pack(side="left")
-
-        self.speedDisplay = tk.Label(
-            speedRow,
-            textvariable=self.speedVar,
-            font=("Helvetica", 14, "bold"),
-            bg=BG_PANEL,
-            fg=TEXT_PRIMARY,
-            width=2
-        )
-        self.speedDisplay.pack(side="left", padx=(12, 0))
-
-        # buttons
-        btnGroup = tk.Frame(panel, bg=BG_PANEL)
-        btnGroup.pack(side="right")
-
-        self.startBtn = tk.Button(
-            btnGroup,
-            text="  Start  ",
-            command=self.toggleStart,
-            bg=ACCENT,
-            fg="white",
-            font=("Helvetica", 11, "bold"),
-            relief="flat",
-            cursor="hand2",
-            padx=14,
-            pady=8,
-            activebackground="#7986cb",
-            activeforeground="white",
-            bd=0
-        )
+        self.startBtn = self.makeBtn(bar, "start", self.toggleStart, TEXT)
         self.startBtn.pack(side="left", padx=(0, 8))
 
-        resetBtn = tk.Button(
-            btnGroup,
-            text="  Reset  ",
-            command=self.reset,
-            bg="#2a2a38",
-            fg=TEXT_MUTED,
-            font=("Helvetica", 11, "bold"),
-            relief="flat",
-            cursor="hand2",
-            padx=14,
-            pady=8,
-            activebackground="#3a3a4a",
-            activeforeground=TEXT_PRIMARY,
-            bd=0
-        )
-        resetBtn.pack(side="left")
+        self.makeBtn(bar, "reset", self.reset, DIM).pack(side="left", padx=(0, 8))
+        self.makeBtn(bar, "save", self.saveImage, DIM).pack(side="left")
 
         # canvas
-        canvasFrame = tk.Frame(wrapper, bg="#1a1a24", padx=1, pady=1)
-        canvasFrame.pack()
-
         self.canvas = tk.Canvas(
-            canvasFrame,
+            wrapper,
             width=CANVAS_WIDTH,
             height=CANVAS_HEIGHT,
-            bg=BG_CANVAS,
-            highlightthickness=0
+            bg=BG,
+            highlightthickness=1,
+            highlightbackground=DIM
         )
         self.canvas.pack()
 
-        # status bar
-        self.statusVar = tk.StringVar(value="press start to begin")
+    def addSlider(self, parent, label, variable, low, high, length):
+        group = tk.Frame(parent, bg=PANEL)
+        group.pack(side="left", padx=(0, 4))
+
         tk.Label(
-            wrapper,
-            textvariable=self.statusVar,
-            font=("Helvetica", 10),
-            bg=BG_DARK,
-            fg=TEXT_MUTED
-        ).pack(pady=(10, 0), anchor="w")
+            group,
+            text=label,
+            font=("Courier", 8),
+            bg=PANEL,
+            fg=DIM
+        ).pack(anchor="w")
+
+        row = tk.Frame(group, bg=PANEL)
+        row.pack()
+
+        ttk.Scale(
+            row,
+            from_=low,
+            to=high,
+            variable=variable,
+            orient="horizontal",
+            length=length,
+            style="S.Horizontal.TScale",
+            command=lambda v: variable.set(int(float(v)))
+        ).pack(side="left")
+
+        tk.Label(
+            row,
+            textvariable=variable,
+            font=("Courier", 13, "bold"),
+            bg=PANEL,
+            fg=TEXT,
+            width=3
+        ).pack(side="left", padx=(8, 0))
+
+    def makeBtn(self, parent, label, command, fg):
+        return tk.Button(
+            parent,
+            text=label,
+            command=command,
+            bg=PANEL,
+            fg=fg,
+            font=("Courier", 10, "bold"),
+            relief="flat",
+            cursor="hand2",
+            padx=14,
+            pady=8,
+            activebackground="#1e1e30",
+            activeforeground=TEXT,
+            bd=0
+        )
 
     def toggleStart(self):
         if self.running:
             self.running = False
-            self.startBtn.config(text="  Start  ", bg=ACCENT)
-            self.statusVar.set("paused")
+            self.startBtn.config(text="start", fg=TEXT)
         else:
-            # apply current speed to all walkers
+            self.canvas.delete("all")
             self.controller.createWalkers(self.walkerCount.get())
             self.applySpeed()
             self.running = True
-            self.startBtn.config(text="  Pause  ", bg="#ef5350")
-            self.statusVar.set(f"running {self.walkerCount.get()} walkers")
+            self.startBtn.config(text="pause", fg="#ff4466")
             self.loop()
 
     def applySpeed(self):
@@ -224,10 +148,20 @@ class App:
 
     def reset(self):
         self.running = False
-        self.startBtn.config(text="  Start  ", bg=ACCENT)
+        self.startBtn.config(text="start", fg=TEXT)
         self.canvas.delete("all")
         self.controller.walkers = []
-        self.statusVar.set("press start to begin")
+
+    def saveImage(self):
+        try:
+            from PIL import ImageGrab
+            x = self.canvas.winfo_rootx()
+            y = self.canvas.winfo_rooty()
+            w = self.canvas.winfo_width()
+            h = self.canvas.winfo_height()
+            ImageGrab.grab(bbox=(x, y, x + w, y + h)).save("walker.png")
+        except ImportError:
+            pass
 
     def loop(self):
         if not self.running:
@@ -240,17 +174,5 @@ class App:
     def draw(self):
         self.canvas.delete("all")
         for walker in self.controller.walkers:
-            # draw trail as connected lines
-            if len(walker.trail) > 1:
-                self.canvas.create_line(
-                    walker.trail,
-                    fill=walker.color,
-                    width=1,
-                    smooth=True
-                )
-            # draw walker head
-            x1 = walker.x - WALKER_RADIUS
-            y1 = walker.y - WALKER_RADIUS
-            x2 = walker.x + WALKER_RADIUS
-            y2 = walker.y + WALKER_RADIUS
-            self.canvas.create_oval(x1, y1, x2, y2, fill=walker.color, outline="")
+            if len(walker.trail) >= 2:
+                self.canvas.create_line(walker.trail, fill=walker.color, width=2, smooth=True)

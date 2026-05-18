@@ -11,7 +11,7 @@ class Walker:
         self.alive = True
         self.stepSize = 3
         self.trail = [(x, y)]
-        self.maxTrail = 60
+        self.maxTrail = 100
 
     def move(self):
         self.x += random.randint(-self.stepSize, self.stepSize)
